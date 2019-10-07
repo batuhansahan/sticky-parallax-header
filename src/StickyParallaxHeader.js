@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import { arrayOf, bool, func, node, number, shape, string } from 'prop-types'
-import { Dimensions, ImageBackground, ScrollView, View, Animated, Easing } from 'react-native'
+import {Platform, Dimensions, ImageBackground, ScrollView, View, Animated, Easing } from 'react-native'
 import { ScrollableTabBar, ScrollableTabView } from './components'
 import { constants } from './constants'
 import styles from './styles'
@@ -11,7 +11,7 @@ const AnimatedScrollView = createAnimatedComponent(ScrollView)
 class StickyParallaxHeader extends Component {
   constructor(props) {
     super(props)
-    const { initialPage } = this.props
+    const { initialPage,currentHeight } = this.props
     const { width } = Dimensions.get('window')
     const scrollXIOS = new Value(initialPage * width)
     const containerWidthAnimatedValue = new Value(width)
@@ -23,7 +23,8 @@ class StickyParallaxHeader extends Component {
       scrollValue,
       containerWidth: width,
       currentPage: initialPage,
-      isFolded: false
+      isFolded: false,
+      currentHeight: currentHeight
     }
     this.scrollY = new ValueXY()
   }
@@ -111,7 +112,6 @@ class StickyParallaxHeader extends Component {
 
   onChangeTabHandler = (tab) => {
     const { onChangeTab } = this.props
-
     return onChangeTab && onChangeTab(tab)
   }
 
@@ -155,6 +155,7 @@ class StickyParallaxHeader extends Component {
   }
 
   renderHeader = () => {
+    debugger
     const { header, headerHeight, backgroundColor } = this.props
 
     const headerStyle = header.props.style
@@ -263,6 +264,7 @@ class StickyParallaxHeader extends Component {
   }
 
   render() {
+    debugger
     const {
       backgroundImage,
       children,
@@ -270,6 +272,7 @@ class StickyParallaxHeader extends Component {
       headerHeight,
       initialPage,
       parallaxHeight,
+      currentHeight,
       tabs,
       bounces,
       scrollEvent
@@ -279,6 +282,7 @@ class StickyParallaxHeader extends Component {
     const headerStyle = header.props.style
     const isArray = Array.isArray(headerStyle)
     const arrayHeaderStyle = {}
+
     if (isArray) {
       headerStyle.map(el => Object.assign(arrayHeaderStyle, el))
     }
@@ -336,32 +340,35 @@ class StickyParallaxHeader extends Component {
               : this.renderPlainBackground(scrollHeight)}
             {this.renderForeground(scrollHeight)}
           </View>
-          {shouldRenderTabs && this.renderTabs()}
-          <ScrollableTabView
-            initialPage={initialPage}
-            onChangeTab={i => this.onChangeTabHandler(i)}
-            tabs={tabs}
-            page={currentPage}
-            swipedPage={this.goToPage}
-            scrollRef={this.scroll}
-            scrollHeight={scrollHeight}
-            isHeaderFolded={isFolded}
-          >
-            {!tabs && children}
-            {tabs
-              && tabs.map(item => (
-                <View
-                  tabLabel={item.title}
-                  key={item.title}
-                  onLayout={this.setContentHeight}
-                  ref={(c) => {
-                    this.tab = c
-                  }}
-                >
-                  {item.content}
-                </View>
-              ))}
-          </ScrollableTabView>
+          {shouldRenderTabs && this.renderTabs()}          
+         
+          <View style={Platform.OS === 'android' ? {height:currentHeight,backgroundColor:'white'} : ''}>        
+            <ScrollableTabView
+              initialPage={initialPage}
+              onChangeTab={(i,height) => this.onChangeTabHandler(i,height)}
+              tabs={tabs}
+              page={currentPage}
+              swipedPage={this.goToPage}
+              scrollRef={this.scroll}
+              scrollHeight={scrollHeight}
+              isHeaderFolded={isFolded}
+            >
+              {!tabs && children}
+              {tabs
+                && tabs.map(item => (
+                  <View
+                    tabLabel={item.title}
+                    key={item.title}
+                    onLayout={this.setContentHeight}
+                    ref={(c) => {
+                      this.tab = c
+                    }}
+                  >
+                    {item.content}
+                  </View>
+                ))}
+            </ScrollableTabView>
+          </View>
         </AnimatedScrollView>
       </View>
     )
@@ -382,6 +389,7 @@ StickyParallaxHeader.propTypes = {
   onChangeTab: func,
   onEndReached: func,
   parallaxHeight: number,
+  currentHeight: number,
   scrollEvent: func,
   snapToEdge: bool,
   tabTextActiveStyle: shape({}),
@@ -399,12 +407,14 @@ StickyParallaxHeader.defaultProps = {
   backgroundColor: '',
   initialPage: 0,
   parallaxHeight: 0,
+  currentHeight: constants.deviceHeight,
   snapToEdge: true,
   tabTextActiveStyle: {},
   tabTextContainerActiveStyle: {},
   tabTextContainerStyle: {},
   tabTextStyle: {},
-  tabsWrapperStyle: {}
+  tabsWrapperStyle: {},
 }
 
 export default StickyParallaxHeader
+

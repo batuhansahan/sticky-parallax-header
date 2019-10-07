@@ -155,7 +155,6 @@ class StickyParallaxHeader extends Component {
   }
 
   renderHeader = () => {
-    debugger
     const { header, headerHeight, backgroundColor } = this.props
 
     const headerStyle = header.props.style
@@ -264,7 +263,6 @@ class StickyParallaxHeader extends Component {
   }
 
   render() {
-    debugger
     const {
       backgroundImage,
       children,
